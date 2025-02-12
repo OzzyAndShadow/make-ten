@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
+	_ "embed"
+	"image/png"
 	"math"
 	"math/rand"
+	"strconv"
 
 	sprites "github.com/OzzyAndShadow/make-ten/libs/sprite"
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -11,21 +15,29 @@ import (
 const (
 	screenSize = 600
 	boardSize  = 10
-	time       = 30
+	maxTime    = 5
+	targetFPS  = 60
 )
 
+//go:embed assets/spritesheet.png
+var rawSpriteSheet []byte
+
 func main() {
-	rl.InitWindow(screenSize, screenSize+100, "Make Ten")
+	rl.InitWindow(screenSize, screenSize+screenSize/boardSize, "Make Ten")
 	defer rl.CloseWindow()
 
 	dragStart := rl.NewVector2(-1, -1)
 	palette := getPalette()
-	spriteSheet := rl.LoadTexture("assets/spritesheet.png")
+
+	spriteSheet := loadEmbeddableTexture(rawSpriteSheet)
+	defer rl.UnloadTexture(spriteSheet)
+
 	var grid [boardSize][boardSize]int
 	refreshGrid(&grid)
+	var score int
+	time := maxTime
 
 	var numberSprites [9]sprites.Sprite
-
 	for i := 0; i < 9; i++ {
 		numberSprites[i] = sprites.Sprite{
 			Frames: []int{i},
@@ -34,10 +46,43 @@ func main() {
 		numberSprites[i].SetSpriteSheet(spriteSheet, 8)
 	}
 
-	rl.SetTargetFPS(60)
-	sprites.SetTargetFPS(60)
+	var bottomSprites [10]sprites.Sprite
+	barFrames := []int{9, 10, 11, 12, 9, 11, 12, 9, 10, 11}
+	for i := 0; i < 10; i++ {
+		bottomSprites[i] = sprites.Sprite{
+			Frames: []int{barFrames[i]},
+			FPS:    1,
+		}
+		bottomSprites[i].SetSpriteSheet(spriteSheet, 8)
+	}
+
+	rl.SetTargetFPS(targetFPS)
+	sprites.SetTargetFPS(targetFPS)
+
+	frames := 0
+	gameOver := false
 
 	for !rl.WindowShouldClose() {
+		frames++
+		if frames == targetFPS {
+			frames = 0
+			time--
+			if time < 0 {
+				time = 0
+				gameOver = true
+				dragStart.X = -1
+			}
+		}
+
+		if rl.CheckCollisionPointRec(rl.GetMousePosition(), getRectangleFromCell(0, 10, 3, 1)) {
+			if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
+				refreshGrid(&grid)
+				score = 0
+				time = maxTime
+				gameOver = false
+			}
+		}
+
 		rl.BeginDrawing()
 
 		rl.ClearBackground(palette.Background)
@@ -51,7 +96,7 @@ func main() {
 			dragStart.Y = -1
 		}
 
-		if dragStart.X != -1 && dragStart.Y != -1 {
+		if dragStart.X != -1 && dragStart.Y != -1 && !gameOver {
 			selection := getMouseSelection(dragStart)
 			cellSize := screenSize / boardSize
 			rl.DrawRectangle(
@@ -78,8 +123,40 @@ func main() {
 			}
 		}
 
+		for i := 0; i < 10; i++ {
+			bottomSprites[i].Display(
+				float32(i*cellSize),
+				float32(boardSize*cellSize),
+				float32(cellSize),
+				float32(cellSize),
+			)
+		}
+
+		resetX := int32(cellSize/2*3) - rl.MeasureText("RESET", 24)/2
+		rl.DrawText("RESET", resetX, int32(boardSize*cellSize+cellSize/3), 24, palette.Text)
+
+		scoreX := int32(screenSize/2) - rl.MeasureText(strconv.Itoa(score), 24)/2
+		rl.DrawText(strconv.Itoa(score), scoreX, int32(boardSize*cellSize+cellSize/3), 24, palette.Text)
+
+		timeX := int32(screenSize-cellSize*3/2) - rl.MeasureText(strconv.Itoa(time), 24)/2
+		rl.DrawText(strconv.Itoa(time), timeX, int32(boardSize*cellSize+cellSize/3), 24, palette.Text)
+
+		if gameOver {
+			clone := palette.Background
+			clone.A = 200
+			rl.DrawRectangle(0, 0, screenSize, screenSize, clone)
+		}
+
 		rl.EndDrawing()
 	}
+}
+
+func loadEmbeddableTexture(raw []byte) rl.Texture2D {
+	img, err := png.Decode(bytes.NewReader(raw))
+	if err != nil {
+		panic(err)
+	}
+	return rl.LoadTextureFromImage(rl.NewImageFromImage(img))
 }
 
 type selection struct {
@@ -90,6 +167,7 @@ type selection struct {
 type palette struct {
 	Background rl.Color
 	Selection  rl.Color
+	Text       rl.Color
 }
 
 func getPalette() palette {
@@ -97,6 +175,7 @@ func getPalette() palette {
 
 	p.Background = rl.NewColor(17, 20, 40, 255)
 	p.Selection = rl.NewColor(29, 34, 68, 255)
+	p.Text = rl.NewColor(181, 190, 224, 255)
 
 	return p
 }
@@ -140,6 +219,11 @@ func getMouseSelection(dragStart rl.Vector2) selection {
 	}
 
 	return sel
+}
+
+func getRectangleFromCell(x int, y int, w int, h int) rl.Rectangle {
+	cellSize := screenSize / boardSize
+	return rl.NewRectangle(float32(x*cellSize), float32(y*cellSize), float32(w*cellSize), float32(h*cellSize))
 }
 
 func refreshGrid(grid *[boardSize][boardSize]int) {
