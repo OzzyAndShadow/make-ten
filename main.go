@@ -15,7 +15,7 @@ import (
 const (
 	screenSize = 600
 	boardSize  = 10
-	maxTime    = 5
+	maxTime    = 60
 	targetFPS  = 60
 )
 
@@ -78,23 +78,32 @@ func main() {
 			if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
 				refreshGrid(&grid)
 				score = 0
+				frames = 0
 				time = maxTime
 				gameOver = false
 			}
 		}
-
-		rl.BeginDrawing()
-
-		rl.ClearBackground(palette.Background)
 
 		if dragStart.X == -1 && rl.IsMouseButtonDown(rl.MouseButtonLeft) {
 			pos := rl.GetMousePosition()
 			dragStart.X = float32(math.Floor(float64(pos.X / screenSize * boardSize)))
 			dragStart.Y = float32(math.Floor(float64(pos.Y / screenSize * boardSize)))
 		} else if dragStart.X != -1 && !rl.IsMouseButtonDown(rl.MouseButtonLeft) {
+			selection := getMouseSelection(dragStart)
+
+			sum := getSumOfSelection(selection, &grid)
+			if sum == 10 {
+				score += int(selection.size.X) * int(selection.size.Y)
+				clearSelection(selection, &grid)
+			}
+
 			dragStart.X = -1
 			dragStart.Y = -1
 		}
+
+		rl.BeginDrawing()
+
+		rl.ClearBackground(palette.Background)
 
 		if dragStart.X != -1 && dragStart.Y != -1 && !gameOver {
 			selection := getMouseSelection(dragStart)
@@ -162,6 +171,24 @@ func loadEmbeddableTexture(raw []byte) rl.Texture2D {
 type selection struct {
 	position rl.Vector2
 	size     rl.Vector2
+}
+
+func getSumOfSelection(sel selection, grid *[boardSize][boardSize]int) int {
+	sum := 0
+	for x := sel.position.X; x < sel.position.X+sel.size.X; x++ {
+		for y := sel.position.Y; y < sel.position.Y+sel.size.Y; y++ {
+			sum += grid[int(x)][int(y)]
+		}
+	}
+	return sum
+}
+
+func clearSelection(sel selection, grid *[boardSize][boardSize]int) {
+	for x := sel.position.X; x < sel.position.X+sel.size.X; x++ {
+		for y := sel.position.Y; y < sel.position.Y+sel.size.Y; y++ {
+			grid[int(x)][int(y)] = 0
+		}
+	}
 }
 
 type palette struct {
