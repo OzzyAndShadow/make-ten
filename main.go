@@ -202,9 +202,9 @@ type palette struct {
 func getPalette() palette {
 	var p palette
 
-	p.Background = rl.NewColor(17, 20, 40, 255)
-	p.Selection = rl.NewColor(29, 34, 68, 255)
-	p.Text = rl.NewColor(181, 190, 224, 255)
+	p.Background = rl.NewColor(30, 30, 46, 255)
+	p.Selection = rl.NewColor(49, 50, 68, 255)
+	p.Text = rl.NewColor(205, 214, 244, 255)
 
 	return p
 }
