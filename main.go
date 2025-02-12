@@ -23,7 +23,7 @@ const (
 var rawSpriteSheet []byte
 
 func main() {
-	rl.InitWindow(screenSize, screenSize+screenSize/boardSize, "Make Ten")
+	rl.InitWindow(screenSize, screenSize+screenSize/10, "Make Ten")
 	defer rl.CloseWindow()
 
 	dragStart := rl.NewVector2(-1, -1)
@@ -74,7 +74,8 @@ func main() {
 			}
 		}
 
-		if rl.CheckCollisionPointRec(rl.GetMousePosition(), getRectangleFromCell(0, 10, 3, 1)) {
+		resetButtonCollision := rl.NewRectangle(0, screenSize, screenSize/10*3, screenSize/10)
+		if rl.CheckCollisionPointRec(rl.GetMousePosition(), resetButtonCollision) {
 			if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
 				refreshGrid(&grid)
 				score = 0
@@ -132,23 +133,24 @@ func main() {
 			}
 		}
 
+		bottomCellSize := screenSize / 10
 		for i := 0; i < 10; i++ {
 			bottomSprites[i].Display(
-				float32(i*cellSize),
+				float32(i*bottomCellSize),
 				float32(boardSize*cellSize),
-				float32(cellSize),
-				float32(cellSize),
+				float32(bottomCellSize),
+				float32(bottomCellSize),
 			)
 		}
 
-		resetX := int32(cellSize/2*3) - rl.MeasureText("RESET", 24)/2
-		rl.DrawText("RESET", resetX, int32(boardSize*cellSize+cellSize/3), 24, palette.Text)
+		resetX := int32(bottomCellSize/2*3) - rl.MeasureText("RESET", 24)/2
+		rl.DrawText("RESET", resetX, int32(boardSize*cellSize+bottomCellSize/3), 24, palette.Text)
 
 		scoreX := int32(screenSize/2) - rl.MeasureText(strconv.Itoa(score), 24)/2
-		rl.DrawText(strconv.Itoa(score), scoreX, int32(boardSize*cellSize+cellSize/3), 24, palette.Text)
+		rl.DrawText(strconv.Itoa(score), scoreX, int32(boardSize*cellSize+bottomCellSize/3), 24, palette.Text)
 
-		timeX := int32(screenSize-cellSize*3/2) - rl.MeasureText(strconv.Itoa(time), 24)/2
-		rl.DrawText(strconv.Itoa(time), timeX, int32(boardSize*cellSize+cellSize/3), 24, palette.Text)
+		timeX := int32(screenSize-bottomCellSize*3/2) - rl.MeasureText(strconv.Itoa(time), 24)/2
+		rl.DrawText(strconv.Itoa(time), timeX, int32(boardSize*cellSize+bottomCellSize/3), 24, palette.Text)
 
 		if gameOver {
 			clone := palette.Background
@@ -256,11 +258,6 @@ func getMouseSelection(dragStart rl.Vector2) selection {
 	}
 
 	return sel
-}
-
-func getRectangleFromCell(x int, y int, w int, h int) rl.Rectangle {
-	cellSize := screenSize / boardSize
-	return rl.NewRectangle(float32(x*cellSize), float32(y*cellSize), float32(w*cellSize), float32(h*cellSize))
 }
 
 func refreshGrid(grid *[boardSize][boardSize]int) {
