@@ -15,7 +15,7 @@ import (
 const (
 	screenSize = 600
 	boardSize  = 10
-	maxTime    = 60
+	maxTime    = 90
 	targetFPS  = 60
 )
 
@@ -211,8 +211,18 @@ func getMouseSelection(dragStart rl.Vector2) selection {
 	var sel selection
 	sel.position = dragStart
 	mousePosition := rl.GetMousePosition()
-	cellX := int(math.Round(float64(mousePosition.X) / screenSize * boardSize))
-	cellY := int(math.Round(float64(mousePosition.Y) / screenSize * boardSize))
+	cellX := float64(mousePosition.X) / screenSize * boardSize
+	cellY := float64(mousePosition.Y) / screenSize * boardSize
+	if cellX < float64(dragStart.X) {
+		cellX = math.Floor(cellX)
+	} else {
+		cellX = math.Ceil(cellX)
+	}
+	if cellY < float64(dragStart.Y) {
+		cellY = math.Floor(cellY)
+	} else {
+		cellY = math.Ceil(cellY)
+	}
 	size := rl.NewVector2(float32(cellX)-dragStart.X, float32(cellY)-dragStart.Y)
 
 	if size.X < 0 {
