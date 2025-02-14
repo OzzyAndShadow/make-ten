@@ -38,22 +38,19 @@ func main() {
 	var score int
 	time := maxTime
 
-	var numberSprites [9]sprites.Sprite
-	loadNumberSprites(&numberSprites, spriteSheet)
-
-	var bottomSprites [10]sprites.Sprite
-	loadBottomBarSprites(&bottomSprites, spriteSheet)
+	numberSprites := loadNumberSprites(spriteSheet)
+	bottomSprites := loadBottomBarSprites(spriteSheet)
 
 	rl.SetTargetFPS(targetFPS)
 	sprites.SetTargetFPS(targetFPS)
 
-	frames := 0
+	frameCounter := 0
 	gameOver := false
 
 	for !rl.WindowShouldClose() {
-		frames++
-		if frames == targetFPS {
-			frames = 0
+		frameCounter++
+		if frameCounter == targetFPS {
+			frameCounter = 0
 			time--
 			if time < 0 {
 				time = 0
@@ -67,7 +64,7 @@ func main() {
 			if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
 				refreshGrid(&grid)
 				score = 0
-				frames = 0
+				frameCounter = 0
 				time = maxTime
 				gameOver = false
 			}
@@ -116,8 +113,9 @@ func updateDragStart(dragStart *rl.Vector2, pos rl.Vector2) {
 	dragStart.Y = float32(math.Floor(float64(pos.Y / screenSize * boardSize)))
 }
 
-func loadBottomBarSprites(bottomSprites *[10]sprites.Sprite, spriteSheet rl.Texture2D) {
+func loadBottomBarSprites(spriteSheet rl.Texture2D) [10]sprites.Sprite {
 	barFrames := []int{9, 10, 11, 12, 9, 11, 12, 9, 10, 11}
+	var bottomSprites [10]sprites.Sprite
 	for i := 0; i < 10; i++ {
 		bottomSprites[i] = sprites.Sprite{
 			Frames: []int{barFrames[i]},
@@ -125,9 +123,11 @@ func loadBottomBarSprites(bottomSprites *[10]sprites.Sprite, spriteSheet rl.Text
 		}
 		bottomSprites[i].SetSpriteSheet(spriteSheet, 8)
 	}
+	return bottomSprites
 }
 
-func loadNumberSprites(numberSprites *[9]sprites.Sprite, spriteSheet rl.Texture2D) {
+func loadNumberSprites(spriteSheet rl.Texture2D) [9]sprites.Sprite {
+	var numberSprites [9]sprites.Sprite
 	for i := 0; i < 9; i++ {
 		numberSprites[i] = sprites.Sprite{
 			Frames: []int{i},
@@ -135,6 +135,7 @@ func loadNumberSprites(numberSprites *[9]sprites.Sprite, spriteSheet rl.Texture2
 		}
 		numberSprites[i].SetSpriteSheet(spriteSheet, 8)
 	}
+	return numberSprites
 }
 
 func drawBottomBar(bottomSprites [10]sprites.Sprite, cellSize int, palette palette, score int, time int) {
