@@ -22,10 +22,6 @@ type SpriteSheet struct {
 	spriteSize int
 }
 
-// frameTime = targetFPS / sprite.FPS
-// index = floor(sprite.frame / frameTime) % sprite.Order.length
-// reset when frame > frameTime * sprite.Order.length
-
 func (sprite *Sprite) AppendFrame(frame int) {
 	sprite.Frames = append(sprite.Frames, frame)
 }
