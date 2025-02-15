@@ -150,13 +150,25 @@ func drawBottomBar(bottomSprites [10]sprites.Sprite, cellSize int, palette palet
 	}
 
 	resetX := int32(bottomCellSize/2*3) - rl.MeasureText("RESET", 24)/2
-	rl.DrawText("RESET", resetX, int32(boardSize*cellSize+bottomCellSize/3), 24, palette.Text)
+	rl.DrawText(
+		"RESET",
+		resetX, int32(boardSize*cellSize+bottomCellSize/3),
+		24, palette.Text,
+	)
 
 	scoreX := int32(screenSize/2) - rl.MeasureText(strconv.Itoa(score), 24)/2
-	rl.DrawText(strconv.Itoa(score), scoreX, int32(boardSize*cellSize+bottomCellSize/3), 24, palette.Text)
+	rl.DrawText(
+		strconv.Itoa(score),
+		scoreX, int32(boardSize*cellSize+bottomCellSize/3),
+		24, palette.Text,
+	)
 
 	timeX := int32(screenSize-bottomCellSize*3/2) - rl.MeasureText(strconv.Itoa(time), 24)/2
-	rl.DrawText(strconv.Itoa(time), timeX, int32(boardSize*cellSize+bottomCellSize/3), 24, palette.Text)
+	rl.DrawText(
+		strconv.Itoa(time),
+		timeX, int32(boardSize*cellSize+bottomCellSize/3),
+		24, palette.Text,
+	)
 }
 
 func drawGrid(grid [10][10]int, numberSprites [9]sprites.Sprite, cellSize int) {
@@ -265,21 +277,21 @@ func getMouseSelection(dragStart rl.Vector2) selection {
 	sel.size = size
 
 	if sel.position.X < 0 {
-		sel.size = rl.Vector2Add(sel.size, rl.NewVector2(sel.position.X, 0))
+		sel.size.X += sel.position.X
 		sel.position.X = 0
 	}
 
 	if sel.position.Y < 0 {
-		sel.size = rl.Vector2Add(sel.size, rl.NewVector2(0, sel.position.Y))
+		sel.size.Y += sel.position.Y
 		sel.position.Y = 0
 	}
 
 	if sel.position.X+sel.size.X > boardSize {
-		sel.size = rl.Vector2Subtract(sel.size, rl.NewVector2(sel.position.X+sel.size.X-boardSize, 0))
+		sel.size.X -= sel.position.X + sel.size.X - boardSize
 	}
 
 	if sel.position.Y+sel.size.Y > boardSize {
-		sel.size = rl.Vector2Subtract(sel.size, rl.NewVector2(0, sel.position.Y+sel.size.Y-boardSize))
+		sel.size.Y -= sel.position.Y + sel.size.Y - boardSize
 	}
 
 	return sel
