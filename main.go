@@ -171,7 +171,7 @@ func drawBottomBar(bottomSprites [10]sprites.Sprite, cellSize int, palette palet
 	)
 }
 
-func drawGrid(grid [10][10]int, numberSprites [9]sprites.Sprite, cellSize int) {
+func drawGrid(grid [boardSize][boardSize]int, numberSprites [9]sprites.Sprite, cellSize int) {
 	for x := 0; x < boardSize; x++ {
 		for y := 0; y < boardSize; y++ {
 			cell := grid[x][y]
